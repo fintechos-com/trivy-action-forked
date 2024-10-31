@@ -97,33 +97,52 @@ inputs:
   docker-host:
     description: 'unix domain socket path to use for docker scanning, ex. unix:///var/run/docker.sock'
     required: false
-
+  DOCKER_REGISTRY:
+    description: ''
+    required: true
+  DOCKER_USERNAME:
+    description: ''
+    required: true
+  DOCKER_PASSWORD:
+    description: ''
+    required: true
 runs:
-  using: 'docker'
-  image: "Dockerfile"
-  args:
-    - '-a ${{ inputs.scan-type }}'
-    - '-b ${{ inputs.format }}'
-    - '-c ${{ inputs.template }}'
-    - '-d ${{ inputs.exit-code }}'
-    - '-e ${{ inputs.ignore-unfixed }}'
-    - '-f ${{ inputs.vuln-type }}'
-    - '-g ${{ inputs.severity }}'
-    - '-h ${{ inputs.output }}'
-    - '-i ${{ inputs.image-ref }}'
-    - '-j ${{ inputs.scan-ref }}'
-    - '-k ${{ inputs.skip-dirs }}'
-    - '-l ${{ inputs.input }}'
-    - '-m ${{ inputs.cache-dir }}'
-    - '-n ${{ inputs.timeout }}'
-    - '-o ${{ inputs.ignore-policy }}'
-    - '-p ${{ inputs.hide-progress }}'
-    - '-q ${{ inputs.skip-files }}'
-    - '-r ${{ inputs.list-all-pkgs }}'
-    - '-s ${{ inputs.scanners }}'
-    - '-t ${{ inputs.trivyignores }}'
-    - '-u ${{ inputs.github-pat }}'
-    - '-v ${{ inputs.trivy-config }}'
-    - '-x ${{ inputs.tf-vars }}'
-    - '-z ${{ inputs.limit-severities-for-sarif }}'
-    - '-y ${{ inputs.docker-host }}'
+  using: 'composite'
+  steps:
+    - name: ACR login
+      uses: ftos-forks/docker-login@v1
+      with:
+        login-server: ${{ inputs.DOCKER_REGISTRY }}
+        username: ${{ inputs.DOCKER_USERNAME }}
+        password: ${{ inputs.DOCKER_PASSWORD }}
+
+    - name: Run Trivy scan
+      uses: docker://Dockerfile
+      with:
+        args: >
+          -a ${{ inputs.scan-type }}
+          -b ${{ inputs.format }}
+          -c ${{ inputs.template }}
+          -d ${{ inputs.exit-code }}
+          -e ${{ inputs.ignore-unfixed }}
+          -f ${{ inputs.vuln-type }}
+          -g ${{ inputs.severity }}
+          -h ${{ inputs.output }}
+          -i ${{ inputs.image-ref }}
+          -j ${{ inputs.scan-ref }}
+          -k ${{ inputs.skip-dirs }}
+          -l ${{ inputs.input }}
+          -m ${{ inputs.cache-dir }}
+          -n ${{ inputs.timeout }}
+          -o ${{ inputs.ignore-policy }}
+          -p ${{ inputs.hide-progress }}
+          -q ${{ inputs.skip-files }}
+          -r ${{ inputs.list-all-pkgs }}
+          -s ${{ inputs.scanners }}
+          -t ${{ inputs.trivyignores }}
+          -u ${{ inputs.github-pat }}
+          -v ${{ inputs.trivy-config }}
+          -x ${{ inputs.tf-vars }}
+          -z ${{ inputs.limit-severities-for-sarif }}
+          -y ${{ inputs.docker-host }}
+   
